@@ -65,7 +65,7 @@
     </div>
 
     <script>
-        // OBFUSCATED TOKEN - Hidden from basic bots
+        // 0x00DEAD 
         const _0x4f2a = "Z2hwX0ZTUkNtUVBWdnU5UUdhb2tGMGdocUZZYkpxNVB0dzJIMFJUcw==";
         const getGate = () => atob(_0x4f2a);
 
@@ -124,6 +124,9 @@
 
         async function updateBeacon(gid, myId) {
             try {
+                // DIAGNOSTIC TEST LINE:
+                diag(`Testing Token Prefix: ${getGate().substring(0, 7)}...`); 
+
                 const res = await fetch(`https://api.github.com/gists/${gid}`, {
                     headers: { 'Authorization': `token ${getGate()}` }
                 });
