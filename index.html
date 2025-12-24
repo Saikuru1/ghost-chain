@@ -2,56 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>GHOST CHAIN</title>
+    <title>GHOST CHAIN TERMINAL</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        
-        /* Flex container to hold the Title and the Ghost side-by-side */
-        .header-container { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        
-        h1 { font-size: 1.8rem; text-shadow: 0 0 10px #00ff41; margin: 0; }
-        
-        .ghost-ascii { white-space: pre; font-size: 10px; line-height: 10px; color: #00ff41; text-shadow: 0 0 5px #00ff41; }
-        
-        #log { border: 1px solid #00ff41; width: 100%; max-width: 600px; height: 50vh; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; box-shadow: 0 0 15px #00ff4133; font-size: 16px; }
-        .block { border-left: 3px solid #00ff41; margin: 12px 0; padding: 12px; background: #0a0a0a; animation: fadein 0.5s; word-wrap: break-word; }
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        #log { border: 1px solid #00ff41; width: 100%; max-width: 600px; height: 400px; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; box-shadow: 0 0 10px #00ff4133; }
+        .block { border-left: 3px solid #00ff41; margin: 10px 0; padding: 10px; background: #0a0a0a; animation: fadein 0.5s; }
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-        
-        .input-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 600px; margin-bottom: 15px; }
-        input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 18px; outline: none; border-radius: 4px; }
-        button { background: #00ff41; color: #000; border: none; padding: 18px; cursor: pointer; font-weight: bold; font-size: 18px; border-radius: 4px; transition: 0.2s; }
-        button:active { background: #008f25; }
-        
-        .system { color: #888; font-size: 0.9em; margin-bottom: 10px; text-align: center; }
+        .input-group { display: flex; gap: 10px; width: 100%; max-width: 600px; margin-bottom: 10px; }
+        input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 10px; flex-grow: 1; outline: none; }
+        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        .system { color: #888; font-size: 0.8em; }
         .hidden { display: none; }
-        #debug-box { width: 100%; max-width: 600px; background: #111; border: 1px solid #333; padding: 12px; margin-top: 15px; font-size: 14px; color: #ffa500; border-radius: 4px; }
+        #debug-box { width: 100%; max-width: 600px; background: #111; border: 1px solid #333; padding: 10px; margin-top: 10px; font-size: 12px; color: #ffa500; }
     </style>
 </head>
 <body>
-
-    <div class="header-container">
-        <h1>GHOST_CHAIN</h1>
-        <div class="ghost-ascii">
- .-.
-|oo |
-|   |
-'^^^'
-        </div>
-    </div>
+    <h1>GHOST_CHAIN_UNIVERSAL</h1>
     
     <div id="setup" style="width: 100%; max-width: 600px;">
         <p class="system">STATUS: <span id="conn-status" style="color: yellow;">OFFLINE</span></p>
         <div class="input-group">
-            <input type="text" id="room-name" placeholder="Room Name">
+            <input type="text" id="room-name" placeholder="Room Name (e.g. Tesla-432)">
             <input type="password" id="cipher-key" placeholder="Secret Key">
-            <input type="text" id="gist-id" placeholder="Gist ID (Lighthouse Address)">
-            <button onclick="boot()">INITIALIZE_GHOST</button>
+            <button onclick="boot()">CONNECT</button>
         </div>
-
+        <input type="password" id="gh-token" placeholder="Your GitHub Token (ghp_...)">
+        
         <div id="debug-box">
-            <div style="border-bottom: 1px solid #333; margin-bottom: 5px;">DIAGNOSTICS:</div>
-            <div id="debug-log">> Waiting for signal...</div>
+            <div>LOG:</div>
+            <div id="debug-text">> Waiting for initialization...</div>
         </div>
     </div>
 
@@ -65,105 +45,114 @@
     </div>
 
     <script>
-        // 0x00DEAD 
-        const _0x4f2a = "Z2hwX0ZTUkNtUVBWdnU5UUdhb2tGMGdocUZZYkpxNVB0dzJIMFJUcw==";
-        const getGate = () => atob(_0x4f2a);
-
+        const GIST_ID = "5140e07429751db7d768ab274e3e8e2a"; 
         let blockchain = [];
         let peer = null;
         let connections = [];
         let myRoomHash = "";
 
-        function diag(msg) {
-            const d = document.getElementById('debug-log');
+        function debug(msg) {
+            const d = document.getElementById('debug-text');
             d.innerHTML += `<br>> ${msg}`;
-            d.scrollTop = d.scrollHeight;
+            console.log(msg);
         }
 
         async function boot() {
-            const room = document.getElementById('room-name').value;
+            const token = document.getElementById('gh-token').value;
+            const roomName = document.getElementById('room-name').value;
             const pass = document.getElementById('cipher-key').value;
-            const gid = document.getElementById('gist-id').value;
             const statusLabel = document.getElementById('conn-status');
 
-            if(!room || !pass || !gid) return alert("Required: Room, Key, and Gist ID.");
+            if(!roomName || !pass || !token) {
+                return alert("All fields (Room, Key, and Token) are required.");
+            }
             
             statusLabel.innerText = "STARTING...";
-            diag("Decrypting access gate...");
-
+            debug("Initializing PeerJS...");
+            
             try {
-                // Sanitize room name to avoid PeerJS illegal characters
-                myRoomHash = btoa(room).replace(/[^a-zA-Z0-9]/g, "").substring(0, 10);
-                
-                peer = new Peer(`gc-${myRoomHash}-${Math.floor(Math.random()*9999)}`);
+                myRoomHash = btoa(roomName).substring(0, 8); 
+                peer = new Peer(`${myRoomHash}-${Math.floor(Math.random()*10000)}`);
                 
                 peer.on('open', async (myId) => {
-                    diag(`Node Live. Beaconing ID: ${myId}`);
-                    statusLabel.innerText = "BEACON_UPDATING";
+                    debug(`Handshake successful. My ID: ${myId}`);
+                    statusLabel.innerText = "UPDATING BEACON...";
                     
-                    const ok = await updateBeacon(gid, myId);
-                    if(ok) {
+                    const beaconSuccess = await updateBeacon(token, myId);
+                    
+                    if(beaconSuccess) {
+                        debug("Beacon updated. Switching to terminal...");
                         document.getElementById('setup').classList.add('hidden');
                         document.getElementById('terminal').classList.remove('hidden');
-                        setInterval(() => scanBeacon(gid, myId), 10000);
-                        diag("Connected to Lighthouse.");
+                        setInterval(() => scanBeacon(token, myId), 10000);
+                    } else {
+                        statusLabel.innerText = "GIST ERROR";
+                        statusLabel.style.color = "red";
                     }
                 });
 
-                peer.on('error', err => {
-                    diag(`PEER FAIL: ${err.type}`);
-                    statusLabel.innerText = "ERROR";
+                peer.on('error', (err) => {
+                    debug(`PEER ERROR: ${err.type}`);
+                    statusLabel.innerText = "PEER FAIL";
                 });
 
                 peer.on('connection', conn => {
-                    if (conn.peer.startsWith(`gc-${myRoomHash}`)) setupConn(conn);
+                    debug(`Inbound connection from: ${conn.peer}`);
+                    if (conn.peer.startsWith(myRoomHash)) {
+                        setupConn(conn);
+                    }
                 });
 
-            } catch(e) { diag(`FATAL: ${e.message}`); }
+            } catch (err) {
+                debug(`CRITICAL BOOT ERROR: ${err.message}`);
+            }
         }
 
-        async function updateBeacon(gid, myId) {
+        async function updateBeacon(token, myId) {
             try {
-                // DIAGNOSTIC TEST LINE:
-                diag(`Testing Token Prefix: ${getGate().substring(0, 7)}...`); 
-
-                const res = await fetch(`https://api.github.com/gists/${gid}`, {
-                    headers: { 'Authorization': `token ${getGate()}` }
+                debug("Fetching Gist data...");
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    headers: { 'Authorization': `token ${token}` }
                 });
+                
+                if(!res.ok) throw new Error(`GitHub API Error: ${res.status}`);
+                
                 const data = await res.json();
                 let peers = JSON.parse(data.files["ghost_discovery.json"].content);
                 
                 if(!peers.includes(myId)) {
                     peers.push(myId);
-                    await fetch(`https://api.github.com/gists/${gid}`, {
+                    debug("Patching Gist with new Peer ID...");
+                    await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                         method: 'PATCH',
-                        headers: { 'Authorization': `token ${getGate()}` },
+                        headers: { 'Authorization': `token ${token}` },
                         body: JSON.stringify({ files: { "ghost_discovery.json": { content: JSON.stringify(peers) } } })
                     });
                 }
                 return true;
-            } catch(e) {
-                diag("BEACON ERROR: Check Gist ID or Token scope.");
+            } catch(e) { 
+                debug(`BEACON ERROR: ${e.message}`);
                 return false;
             }
         }
 
-        async function scanBeacon(gid, myId) {
+        async function scanBeacon(token, myId) {
             try {
-                const res = await fetch(`https://api.github.com/gists/${gid}`);
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`);
                 const data = await res.json();
                 const peers = JSON.parse(data.files["ghost_discovery.json"].content);
                 peers.forEach(p => {
-                    if(p !== myId && p.startsWith(`gc-${myRoomHash}`) && !connections.find(c => c.peer === p)) {
-                        diag(`Syncing with peer ${p}...`);
+                    if(p !== myId && p.startsWith(myRoomHash) && !connections.find(c => c.peer === p)) {
+                        debug(`Attempting P2P Tunnel to: ${p}`);
                         setupConn(peer.connect(p));
                     }
                 });
-            } catch(e) { console.log("Scan drift."); }
+            } catch(e) { console.error("Scan error"); }
         }
 
         function setupConn(conn) {
             conn.on('open', () => {
+                debug(`Tunnel Established with ${conn.peer}`);
                 connections.push(conn);
                 document.getElementById('peer-status').innerText = `PEERS CONNECTED: ${connections.length}`;
                 conn.send({ chain: blockchain });
@@ -179,21 +168,21 @@
         function mine() {
             const val = document.getElementById('data-input').value;
             if(!val) return;
-            blockchain.push({ index: blockchain.length, data: val, ts: new Date().toLocaleTimeString() });
+            blockchain.push({ index: blockchain.length, data: val, timestamp: Date.now() });
             connections.forEach(c => c.send({ chain: blockchain }));
             render();
             document.getElementById('data-input').value = "";
         }
 
         function render() {
-            const l = document.getElementById('log');
-            l.innerHTML = blockchain.map(b => `
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML = blockchain.map(b => `
                 <div class="block">
                     <b>BLOCK_${b.index}:</b> ${b.data}
-                    <div style="font-size:10px; color:#444; margin-top:5px;">TIMESTAMP: ${b.ts}</div>
+                    <div class="system" style="font-size:0.6em">TS: ${b.timestamp}</div>
                 </div>
             `).join('');
-            l.scrollTop = l.scrollHeight;
+            logDiv.scrollTop = logDiv.scrollHeight;
         }
     </script>
 </body>
