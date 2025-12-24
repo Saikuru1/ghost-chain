@@ -13,7 +13,8 @@
         h1 { font-size: 1.8rem; text-shadow: 0 0 10px #00ff41; margin: 0; }
         .ghost-ascii { white-space: pre; font-size: 10px; line-height: 10px; color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         
-        #log { border: 1px solid #00ff41; width: 100%; max-width: 600px; height: 50vh; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; box-shadow: 0 0 15px #00ff4133; font-size: 16px; }
+        /* EDIT 2: Full-Width Interface - Force board to stay wide from start */
+        #log { border: 1px solid #00ff41; width: 100%; max-width: 600px; height: 50vh; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; box-shadow: 0 0 15px #00ff4133; font-size: 16px; box-sizing: border-box; }
         .block { border-left: 3px solid #00ff41; margin: 12px 0; padding: 12px; background: #0a0a0a; animation: fadein 0.5s; word-wrap: break-word; }
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
         
@@ -203,21 +204,28 @@
             });
         }
 
+        // EDIT 1: GHOST Attribution - Capture 4-digit ID
         function mine() {
             const val = document.getElementById('data-input').value;
             if(!val) return;
-            blockchain.push({ index: blockchain.length, data: val, ts: new Date().toLocaleTimeString() });
+            blockchain.push({ 
+                index: blockchain.length, 
+                data: val, 
+                ts: new Date().toLocaleTimeString(),
+                ghostId: peer.id.slice(-4)
+            });
             connections.forEach(c => c.send({ chain: blockchain }));
             render();
             document.getElementById('data-input').value = "";
         }
 
+        // EDIT 1: GHOST Attribution - Display formatted identity
         function render() {
             const logDiv = document.getElementById('log');
             logDiv.innerHTML = blockchain.map(b => `
                 <div class="block">
                     <b>BLOCK_${b.index}:</b> ${b.data}
-                    <div class="system" style="font-size:0.7em; margin-top:5px;">TIMESTAMP: ${b.ts}</div>
+                    <div class="system" style="font-size:0.7em; margin-top:5px;">GHOST: ${b.ghostId || 'VOID'} | TIME: ${b.ts}</div>
                 </div>
             `).join('');
             logDiv.scrollTop = logDiv.scrollHeight;
