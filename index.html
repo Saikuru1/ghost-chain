@@ -7,11 +7,10 @@
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Flex container to hold the Title and the Ghost side-by-side */
-        .header-container { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        /* Flex container for Header */
+        .header-container { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; width: 100%; max-width: 600px; justify-content: space-between; }
         
         h1 { font-size: 1.8rem; text-shadow: 0 0 10px #00ff41; margin: 0; }
-        
         .ghost-ascii { white-space: pre; font-size: 10px; line-height: 10px; color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         
         #log { border: 1px solid #00ff41; width: 100%; max-width: 600px; height: 50vh; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; box-shadow: 0 0 15px #00ff4133; font-size: 16px; }
@@ -22,19 +21,27 @@
         input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 18px; outline: none; border-radius: 4px; }
         button { background: #00ff41; color: #000; border: none; padding: 18px; cursor: pointer; font-weight: bold; font-size: 18px; border-radius: 4px; transition: 0.2s; }
         button:active { background: #008f25; }
-        
+        .btn-small { padding: 8px 12px; font-size: 12px; background: transparent; color: #00ff41; border: 1px solid #00ff41; }
+
         .system { color: #888; font-size: 0.9em; margin-bottom: 10px; text-align: center; }
         .hidden { display: none; }
         
-        /* Diagnostics Styling */
+        /* Diagnostics & Docs Overlay */
         #debug-box { width: 100%; max-width: 600px; background: #111; border: 1px solid #333; padding: 12px; margin-top: 15px; font-size: 14px; color: #ffa500; border-radius: 4px; }
         #debug-text { max-height: 100px; overflow-y: auto; }
+        
+        #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100; overflow-y: auto; padding: 30px; box-sizing: border-box; border: 2px solid #00ff41; display:none; }
+        .docs-content { max-width: 800px; margin: 0 auto; line-height: 1.6; color: #00ff41; }
+        hr { border: 0; border-top: 1px dashed #00ff41; margin: 20px 0; }
     </style>
 </head>
 <body>
 
     <div class="header-container">
-        <h1>GHOST_CHAIN</h1>
+        <div>
+            <h1>GHOST_CHAIN</h1>
+            <button class="btn-small" onclick="toggleDocs(true)">VIEW_DOCS</button>
+        </div>
         <div class="ghost-ascii">
  .-.
 |oo |
@@ -43,10 +50,40 @@
         </div>
     </div>
     
+    <div id="docs-overlay">
+        <div class="docs-content">
+            <button onclick="toggleDocs(false)" style="float:right; padding:10px; background:#00ff41; color:#000; border:none; font-weight:bold; cursor:pointer;">CLOSE_X</button>
+            <pre class="ghost-ascii" style="font-size: 14px; line-height: 14px;">
+      .-.
+     |oo |  < GHOST_CHAIN_ACTIVE
+     |   |
+     '^^^'
+            </pre>
+            <h2>GHOST CHAIN: A Technical White Paper</h2>
+            <p><strong>1. Abstract:</strong> Ghost Chain is an ephemeral Peer-to-Peer (P2P) protocol that utilizes a "Lighthouse" discovery mechanism to establish encrypted WebRTC tunnels between nodes. Unlike traditional blockchains that prioritize permanent storage, Ghost Chain prioritizes memory-only persistence.</p>
+            <p><strong>2. The Signaling Layer:</strong> Ghost Chain solves NAT traversal using a GitHub Gist as a Beacon (Lighthouse). Nodes post a randomized Peer ID, prefixed with a Room Hash, to a hidden Gist. Every 10 seconds, a scanBeacon operation pulls the latest IDs. A GitHub Action (Janitor) wipes the Gist daily to ensure zero-trace operation.</p>
+            <p><strong>3. Consensus:</strong> Uses a simplified GHOST protocol. Longest Chain Wins: When peers connect, they adopt the longer chain as the "Truth." Mining refers to local block creation broadcast via WebRTC.</p>
+            <p><strong>4. Security:</strong> Room names are Base64 hashed (Unique Frequency). Transport uses mandatory WebRTC DTLS encryption. Application-level secrecy supports AES-GCM encryption via the Secret Key.</p>
+            <p><strong>5. Persistence:</strong> Zero-Knowledge Hosting. Volatile Memory storage (RAM-only). Never written to Disk, LocalStorage, or Cookies.</p>
+            <hr>
+            <h2>GHOST CHAIN: USER OPERATING GUIDE</h2>
+            <p><strong>1. Prerequisites:</strong> You need the Access URL and a PAT with Gist authorization.</p>
+            <p><strong>2. Initializing:</strong> Select a Room Name (shared frequency) and a Secret Key (encryption). Paste your PAT and click INITIALIZE_GHOST.</p>
+            <p><strong>3. Communication:</strong> Once connected, type data and click MINE. The new block is broadcast directly into your peer's browser RAM.</p>
+            <p><strong>4. The Kill Switch:</strong> Closing the tab or refreshing acting as a master purge, instantly erasing the local ledger.</p>
+            <hr>
+            <h3>OBTAINING PAT: YOUR GHOST PASSWORD</h3>
+            <p>1. GitHub Settings > Developer Settings > Tokens (classic).<br>
+            2. Generate new token (classic).<br>
+            3. Select <b>[x] gist</b> scope ONLY.<br>
+            4. Copy the ghp_ string and paste it into the terminal.</p>
+        </div>
+    </div>
+
     <div id="setup" style="width: 100%; max-width: 600px;">
         <p class="system">STATUS: <span id="conn-status" style="color: yellow;">OFFLINE</span></p>
         <div class="input-group">
-            <input type="text" id="room-name" placeholder="Room Name (e.g. Tesla-432)">
+            <input type="text" id="room-name" placeholder="Room Name (e.g. Sector-7)">
             <input type="password" id="cipher-key" placeholder="Secret Key">
             <input type="password" id="gh-token" placeholder="GitHub Token (ghp_...)">
             <button onclick="boot()">INITIALIZE_GHOST</button>
@@ -68,18 +105,20 @@
     </div>
 
     <script>
-        // Fixed Gist ID based on your working version
         const GIST_ID = "5140e07429751db7d768ab274e3e8e2a";
         let blockchain = [];
         let peer = null;
         let connections = [];
         let myRoomHash = "";
 
+        function toggleDocs(show) {
+            document.getElementById('docs-overlay').style.display = show ? 'block' : 'none';
+        }
+
         function debug(msg) {
             const d = document.getElementById('debug-text');
             d.innerHTML += `<br>> ${msg}`;
             d.scrollTop = d.scrollHeight;
-            console.log(msg);
         }
 
         async function boot() {
@@ -88,67 +127,43 @@
             const pass = document.getElementById('cipher-key').value;
             const statusLabel = document.getElementById('conn-status');
 
-            if(!roomName || !pass || !token) {
-                return alert("All fields (Room, Key, and Token) are required.");
-            }
+            if(!roomName || !pass || !token) return alert("All fields are required.");
             
             statusLabel.innerText = "STARTING...";
-            debug("Initializing PeerJS...");
+            debug("Initializing Ghost Protocol...");
             
             try {
-                // Sanitize Room ID for PeerJS
                 myRoomHash = btoa(roomName).replace(/[^a-zA-Z0-9]/g, "").substring(0, 8);
                 peer = new Peer(`gc-${myRoomHash}-${Math.floor(Math.random()*10000)}`);
                 
                 peer.on('open', async (myId) => {
-                    debug(`Handshake successful. My ID: ${myId}`);
+                    debug(`Local Node Live: ${myId}`);
                     statusLabel.innerText = "UPDATING BEACON...";
-                    
-                    const beaconSuccess = await updateBeacon(token, myId);
-                    
-                    if(beaconSuccess) {
-                        debug("Beacon updated. Ghost Materialized.");
+                    const success = await updateBeacon(token, myId);
+                    if(success) {
+                        debug("Beacon set. Ghost Materialized.");
                         document.getElementById('setup').classList.add('hidden');
                         document.getElementById('terminal').classList.remove('hidden');
                         setInterval(() => scanBeacon(token, myId), 10000);
-                    } else {
-                        statusLabel.innerText = "GIST ERROR";
-                        statusLabel.style.color = "red";
                     }
                 });
 
-                peer.on('error', (err) => {
-                    debug(`PEER ERROR: ${err.type}`);
-                    statusLabel.innerText = "PEER FAIL";
-                });
-
+                peer.on('error', err => debug(`PEER ERROR: ${err.type}`));
                 peer.on('connection', conn => {
-                    debug(`Inbound connection from: ${conn.peer}`);
-                    if (conn.peer.startsWith(`gc-${myRoomHash}`)) {
-                        setupConn(conn);
-                    }
+                    if (conn.peer.startsWith(`gc-${myRoomHash}`)) setupConn(conn);
                 });
-
-            } catch (err) {
-                debug(`CRITICAL BOOT ERROR: ${err.message}`);
-            }
+            } catch (err) { debug(`CRITICAL: ${err.message}`); }
         }
 
         async function updateBeacon(token, myId) {
             try {
-                debug("Fetching Gist data...");
                 const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                     headers: { 'Authorization': `token ${token}` }
                 });
-                
-                if(!res.ok) throw new Error(`GitHub API Error: ${res.status}`);
-                
                 const data = await res.json();
                 let peers = JSON.parse(data.files["ghost_discovery.json"].content);
-                
                 if(!peers.includes(myId)) {
                     peers.push(myId);
-                    debug("Patching Lighthouse beacon...");
                     await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                         method: 'PATCH',
                         headers: { 'Authorization': `token ${token}` },
@@ -156,10 +171,7 @@
                     });
                 }
                 return true;
-            } catch(e) {
-                debug(`BEACON ERROR: ${e.message}`);
-                return false;
-            }
+            } catch(e) { debug(`BEACON ERROR: ${e.message}`); return false; }
         }
 
         async function scanBeacon(token, myId) {
@@ -169,16 +181,16 @@
                 const peers = JSON.parse(data.files["ghost_discovery.json"].content);
                 peers.forEach(p => {
                     if(p !== myId && p.startsWith(`gc-${myRoomHash}`) && !connections.find(c => c.peer === p)) {
-                        debug(`Tunneling to peer: ${p}`);
+                        debug(`Tunneling: ${p}`);
                         setupConn(peer.connect(p));
                     }
                 });
-            } catch(e) { console.error("Scan error"); }
+            } catch(e) { console.log("Scan drift"); }
         }
 
         function setupConn(conn) {
             conn.on('open', () => {
-                debug(`Tunnel Established with ${conn.peer}`);
+                debug(`Tunnel Established: ${conn.peer}`);
                 connections.push(conn);
                 document.getElementById('peer-status').innerText = `PEERS CONNECTED: ${connections.length}`;
                 conn.send({ chain: blockchain });
@@ -194,11 +206,7 @@
         function mine() {
             const val = document.getElementById('data-input').value;
             if(!val) return;
-            blockchain.push({ 
-                index: blockchain.length, 
-                data: val, 
-                timestamp: new Date().toLocaleTimeString() 
-            });
+            blockchain.push({ index: blockchain.length, data: val, ts: new Date().toLocaleTimeString() });
             connections.forEach(c => c.send({ chain: blockchain }));
             render();
             document.getElementById('data-input').value = "";
@@ -209,7 +217,7 @@
             logDiv.innerHTML = blockchain.map(b => `
                 <div class="block">
                     <b>BLOCK_${b.index}:</b> ${b.data}
-                    <div class="system" style="font-size:0.7em; margin-top:5px;">TIMESTAMP: ${b.timestamp}</div>
+                    <div class="system" style="font-size:0.7em; margin-top:5px;">TIMESTAMP: ${b.ts}</div>
                 </div>
             `).join('');
             logDiv.scrollTop = logDiv.scrollHeight;
