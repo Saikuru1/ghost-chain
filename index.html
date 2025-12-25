@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST CHAIN</title>
+    <title>GHOST CHAIN v3.9.1</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
@@ -126,7 +126,7 @@
             </ul>
 
             <hr style="border:0; border-top:1px dashed #00ff41;">
-            <p style="font-size: 0.8em; text-align: center;">V3 // STABLE_RELEASE // ENCRYPTED_MESH</p>
+            <p style="font-size: 0.8em; text-align: center;">V3.9.1 // STABLE_RELEASE // ACTIVE_HANDSHAKE</p>
         </div>
     </div>
 
@@ -165,6 +165,7 @@
                 document.getElementById('setup').classList.add('hidden');
                 document.getElementById('terminal').classList.remove('hidden');
                 document.getElementById('status').innerText = `NODE: SLOT_${slot} | E2EE_ACTIVE`;
+                // Dial potential peers
                 for(let i=1; i<=8; i++) { if(i !== slot) setupConn(peer.connect(`gc-${hash}-${i}`)); }
             });
             p.on('error', (err) => { if(err.type === 'unavailable-id') trySlot(hash, slot + 1); });
@@ -176,15 +177,32 @@
                 if(connections.find(c => c.peer === conn.peer)) return;
                 connections.push(conn);
                 document.getElementById('status').innerText = `MESH_ACTIVE: ${connections.length} PEERS`;
-                conn.send({ type: 'SYNC', chain: blockchain });
+                
+                // GHOST_FIX: Don't just push. Request their state too.
+                conn.send({ type: 'SYNC_REQUEST' });
+                if(blockchain.length > 0) conn.send({ type: 'CHAIN', chain: blockchain });
             });
+
             conn.on('data', data => {
-                if(data.type === 'SCRUB') {
+                if(data.type === 'SYNC_REQUEST') {
+                    // Send current state to requester
+                    conn.send({ type: 'CHAIN', chain: blockchain });
+                } 
+                else if(data.type === 'SCRUB') {
                     executeScrub(data.targetId);
-                } else if(data.chain && data.chain.length > blockchain.length) {
-                    blockchain = data.chain;
-                    render();
+                } 
+                else if(data.type === 'CHAIN') {
+                    // GHOST_FIX: Accept chain if it's longer OR if our local chain is currently empty
+                    if(data.chain && (data.chain.length > blockchain.length || blockchain.length === 0)) {
+                        blockchain = data.chain;
+                        render();
+                    }
                 }
+            });
+
+            conn.on('close', () => {
+                connections = connections.filter(c => c.peer !== conn.peer);
+                document.getElementById('status').innerText = `MESH_ACTIVE: ${connections.length} PEERS`;
             });
         }
 
@@ -199,6 +217,7 @@
             blockchain = blockchain.filter(b => b.sender !== idToWipe);
             render();
             document.getElementById('status').innerText = `EXPUNGED: GHOST_0${idToWipe}`;
+            // Re-broadcast clean chain
             connections.forEach(c => c.send({ type: 'CHAIN', chain: blockchain }));
         }
 
