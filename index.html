@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST CHAIN v3.9</title>
+    <title>GHOST CHAIN</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Centered Block, Left-Aligned Internal ASCII */
         .ghost-ascii { 
             white-space: pre; 
             font-size: 14px; 
@@ -32,6 +31,7 @@
             margin-bottom: 15px; 
             box-shadow: 0 0 15px #00ff4133;
             box-sizing: border-box; 
+            transition: all 0.3s ease;
         }
 
         .block { 
@@ -42,10 +42,10 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
-            animation: emerge 0.3s ease-out;
+            animation: emerge 0.4s ease-out;
         }
 
-        @keyframes emerge { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes emerge { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .block-meta { 
             display: flex; 
@@ -60,16 +60,15 @@
         .input-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
         input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 16px; outline: none; width: 100%; box-sizing: border-box; }
         
-        button { background: #00ff41; color: #000; border: none; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
-        button:active { background: #008f11; }
+        button { background: #00ff41; color: #000; border: none; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px; }
         
-        .btn-scrub { background: #111; color: #ff4141; border: 1px solid #ff4141; margin-top: 5px; font-size: 12px; padding: 8px; }
+        .btn-scrub { background: #111; color: #ff4141; border: 1px solid #ff4141; margin-top: 5px; font-size: 12px; padding: 8px; cursor: pointer; }
         .btn-scrub:hover { background: #ff4141; color: #000; }
         
         .btn-docs { background: transparent; color: #00ff41; border: 1px solid #00ff41; font-size: 10px; padding: 4px 8px; margin-bottom: 15px; width: auto; align-self: center; cursor: pointer; }
 
         #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100; overflow-y: auto; padding: 30px; display:none; box-sizing: border-box; }
-        .docs-content { max-width: 650px; margin: 0 auto; color: #00ff41; border: 1px solid #00ff41; padding: 25px; background: #000; line-height: 1.6; }
+        .docs-content { max-width: 650px; margin: 0 auto; color: #00ff41; border: 1px solid #00ff41; padding: 25px; background: #000; line-height: 1.5; font-size: 13px; }
 
         .hidden { display: none; }
         #status { color: #444; font-size: 0.75em; text-align: center; margin-top: 10px; letter-spacing: 1px; }
@@ -84,7 +83,7 @@
   |   |
   '^^^'</pre>
         
-        <button class="btn-docs" onclick="toggleDocs(true)">SYSTEM_MANUAL_v3.9</button>
+        <button class="btn-docs" onclick="toggleDocs(true)">WHITE_PAPER</button>
 
         <div id="setup">
             <div class="input-group">
@@ -108,16 +107,26 @@
     <div id="docs-overlay">
         <div class="docs-content">
             <button onclick="toggleDocs(false)" style="float:right; padding:5px; background:#00ff41; color:#000; border:none; cursor:pointer; font-weight:bold;">CLOSE</button>
-            <h2 style="text-align:center;">GHOST_CHAIN_v3.9</h2>
-            <hr style="border:1px dashed #00ff41;">
+            <h2 style="margin-top:0;">GHOST_CHAIN_WHITE_PAPER</h2>
+            <hr style="border:0; border-top:1px dashed #00ff41;">
+            
+            <p><strong>ABSTRACT:</strong> An ephemeral, decentralized communication protocol designed for zero-trace data exchange. Ghost Chain exists solely in volatile memory (RAM).</p>
+            <p><strong>SIGNALING:</strong> Utilizes deterministic SHA-256 peer-id derivation to eliminate the need for centralized discovery relays.</p>
+            <p><strong>SECURITY:</strong> Mandatory end-to-end encryption via AES-256-GCM. Payloads are encrypted locally before transmission. The Secret Key is never broadcast.</p>
+            <p><strong>PERSISTENCE:</strong> Non-existent. Closing the browser tab acts as a hardware-level kill switch, permanently erasing all ledger history.</p>
+            
+            <hr style="border:0; border-top:1px dashed #00ff41;">
+            
             <h3>SOVEREIGN REDACTION PROTOCOL</h3>
-            <p>Ghost Chain v3.9 introduces the <strong>Targeted Scrubbing</strong> mechanism. This ensures that while the network remains resilient, the individual ghost maintains absolute sovereignty over their data footprint.</p>
+            <p>Targeted Scrubbing ensures that while the network remains resilient, the individual ghost maintains absolute sovereignty over their data footprint.</p>
             <ul>
-                <li><strong>Total Disappearance:</strong> Scrubbing doesn't just hide messages; it filters them out of the active blockchain array in every peer's RAM.</li>
-                <li><strong>Broadcast Redaction:</strong> When a scrub is triggered, a high-priority packet is sent to the mesh, instructing all nodes to expunge blocks tied to your specific Ghost ID.</li>
-                <li><strong>Deterministic Security:</strong> All payloads remain protected by AES-256-GCM. Redaction occurs at the state level, ensuring no "tombstones" or metadata remain.</li>
+                <li><strong>Total Disappearance:</strong> Scrubbing filters blocks out of the active blockchain array in every peer's RAM. No "tombstones" or placeholders remain.</li>
+                <li><strong>Broadcast Redaction:</strong> A high-priority packet instructs all nodes to expunge blocks tied to the sender's specific Ghost ID.</li>
+                <li><strong>Re-Sync:</strong> Following a scrub, the network converges on a new "Shortest Valid Chain," effectively re-writing the session history in real-time.</li>
             </ul>
-            <p style="font-size:0.8em; color:#444; text-align:center;">RAM-ONLY // NO PERSISTENCE // E2EE</p>
+
+            <hr style="border:0; border-top:1px dashed #00ff41;">
+            <p style="font-size: 0.8em; text-align: center;">V3 // STABLE_RELEASE // ENCRYPTED_MESH</p>
         </div>
     </div>
 
@@ -190,7 +199,6 @@
             blockchain = blockchain.filter(b => b.sender !== idToWipe);
             render();
             document.getElementById('status').innerText = `EXPUNGED: GHOST_0${idToWipe}`;
-            // Re-broadcast clean chain to new peers
             connections.forEach(c => c.send({ type: 'CHAIN', chain: blockchain }));
         }
 
