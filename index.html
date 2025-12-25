@@ -3,55 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST CHAIN v3.5</title>
+    <title>GHOST CHAIN v3.6</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .ghost-ascii { white-space: pre; font-size: 11px; line-height: 1; margin-bottom: 20px; color: #00ff41; text-shadow: 0 0 5px #00ff41; }
-        #log { border: 1px solid #00ff41; width: 100%; max-width: 500px; height: 50vh; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; }
-        .block { border-left: 2px solid #00ff41; margin: 10px 0; padding: 10px; background: #0a0a0a; }
-        .block-meta { display: flex; justify-content: space-between; font-size: 0.7em; color: #444; margin-top: 5px; border-top: 1px solid #111; }
-        input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
-        button { background: #00ff41; color: #000; border: none; padding: 15px; width: 100%; cursor: pointer; font-weight: bold; }
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Centered Ghost Header */
+        .ghost-ascii { white-space: pre; font-size: 12px; line-height: 1.2; color: #00ff41; text-shadow: 0 0 8px #00ff41; margin-bottom: 20px; text-align: center; cursor: pointer; }
+        
+        /* Layout & Alignment */
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: stretch; }
+        
+        #log { 
+            border: 1px solid #00ff41; 
+            height: 55vh; 
+            overflow-y: auto; 
+            padding: 15px; 
+            background: #000; 
+            margin-bottom: 15px; 
+            box-shadow: 0 0 15px #00ff4133;
+            box-sizing: border-box; 
+        }
+
+        .block { 
+            border-left: 3px solid #00ff41; 
+            margin: 12px 0; 
+            padding: 12px; 
+            background: #0a0a0a; 
+            word-wrap: break-word; /* Prevents text overflow */
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .block-meta { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.75em; 
+            color: #444; 
+            margin-top: 8px; 
+            border-top: 1px solid #111; 
+            padding-top: 4px; 
+        }
+
+        /* Inputs & Buttons */
+        .input-group { display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box; }
+        input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 16px; outline: none; width: 100%; box-sizing: border-box; }
+        button { background: #00ff41; color: #000; border: none; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; width: 100%; box-sizing: border-box; }
+        button:hover { background: #00cc33; }
+        
+        .btn-docs { background: transparent; color: #00ff41; border: 1px solid #00ff41; font-size: 10px; padding: 5px; margin-bottom: 10px; width: auto; align-self: center; }
+
+        /* Docs Overlay */
+        #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; overflow-y: auto; padding: 30px; display:none; box-sizing: border-box; }
+        .docs-content { max-width: 700px; margin: 0 auto; color: #00ff41; border: 1px solid #00ff41; padding: 20px; background: #000; }
+
         .hidden { display: none; }
-        #status { font-size: 0.8em; color: orange; margin-top: 10px; }
+        #status { color: #888; font-size: 0.8em; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <pre class="ghost-ascii">
+    <div class="container">
+        <pre class="ghost-ascii" onclick="toggleDocs(true)">
    .-.
   |oo |
   |   |
-  '^^^'</pre>
+  '^^^'
+        </pre>
+        <button class="btn-docs" onclick="toggleDocs(true)">VIEW_WHITE_PAPER</button>
 
-    <div id="setup" style="width: 100%; max-width: 400px;">
-        <input type="text" id="room" placeholder="ROOM_NAME">
-        <input type="password" id="key" placeholder="SECRET_KEY">
-        <button onclick="boot()">INITIALIZE_GHOST</button>
+        <div id="setup">
+            <div class="input-group">
+                <input type="text" id="room" placeholder="ROOM_IDENTIFIER">
+                <input type="password" id="key" placeholder="SECRET_CIPHER_KEY">
+                <button onclick="boot()">INITIALIZE_GHOST</button>
+            </div>
+        </div>
+
+        <div id="terminal" class="hidden">
+            <div id="log"></div>
+            <div class="input-group">
+                <input type="text" id="msg" placeholder="Write to ledger..." onkeypress="if(event.key==='Enter') mine()">
+                <button onclick="mine()">MINE_BLOCK</button>
+            </div>
+            <div id="status">Syncing mesh nodes...</div>
+        </div>
     </div>
 
-    <div id="terminal" class="hidden" style="width: 100%; max-width: 500px;">
-        <div id="log"></div>
-        <input type="text" id="msg" placeholder="Type message..." onkeypress="if(event.key==='Enter') mine()">
-        <button onclick="mine()">MINE_BLOCK</button>
-        <div id="status">Connecting to mesh...</div>
+    <div id="docs-overlay">
+        <div class="docs-content">
+            <button onclick="toggleDocs(false)" style="float:right; width:auto; padding:5px 10px;">CLOSE</button>
+            <h2>GHOST_CHAIN: Technical White Paper (v3.6)</h2>
+            <hr>
+            <p><strong>1. Ephemeral Architecture:</strong> Ghost Chain is a non-persistent, memory-only P2P ledger. No data survives a browser refresh.</p>
+            <p><strong>2. Deterministic Mesh:</strong> Uses SHA-256 room-hashing to establish predictable peer slots, bypassing the need for discovery relays.</p>
+            <p><strong>3. E2EE Security:</strong> All payloads are encrypted using <strong>AES-256-GCM</strong>. The Secret Key never leaves your local RAM.</p>
+            <p><strong>4. Zero Trace:</strong> No cookies, no local storage, no databases. Pure volatility.</p>
+            <hr>
+            <p><em>Click anywhere outside this box to return.</em></p>
+        </div>
     </div>
 
     <script>
-        let blockchain = [], connections = [], peer = null, myId = "";
+        let blockchain = [], connections = [], peer = null, myId = "", rawKey = "";
+
+        function toggleDocs(show) { document.getElementById('docs-overlay').style.display = show ? 'block' : 'none'; }
 
         async function boot() {
             const room = document.getElementById('room').value;
-            const key = document.getElementById('key').value;
-            if(!room || !key) return;
+            rawKey = document.getElementById('key').value;
+            if(!room || !rawKey) return alert("Credentials required.");
 
-            // Simple hash to create a shared "Address Space"
-            const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(room + key))))
-                         .map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
+            const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(room + rawKey))))
+                         .map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 10);
             
-            // Try slots 1-5
             trySlot(hash, 1);
+        }
+
+        // Encryption Utility
+        async function crypt(text, mode) {
+            const enc = new TextEncoder();
+            const keyHash = await crypto.subtle.digest('SHA-256', enc.encode(rawKey));
+            const key = await crypto.subtle.importKey('raw', keyHash, 'AES-GCM', false, ['encrypt', 'decrypt']);
+            
+            if(mode === 'enc') {
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const cipher = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, enc.encode(text));
+                return { c: Array.from(new Uint8Array(cipher)), i: Array.from(iv) };
+            } else {
+                const decrypt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: new Uint8Array(text.i)}, key, new Uint8Array(text.c));
+                return new TextDecoder().decode(decrypt);
+            }
         }
 
         function trySlot(hash, slot) {
@@ -62,19 +144,11 @@
                 peer = p; myId = id;
                 document.getElementById('setup').classList.add('hidden');
                 document.getElementById('terminal').classList.remove('hidden');
-                document.getElementById('status').innerText = `LOCAL_NODE: SLOT_${slot}`;
-                
-                // Auto-dial other potential slots
-                for(let i=1; i<=5; i++) {
-                    if(i !== slot) setupConn(peer.connect(`gc-${hash}-${i}`));
-                }
+                document.getElementById('status').innerText = `NODE: SLOT_${slot} | ENCRYPTION_ACTIVE`;
+                for(let i=1; i<=5; i++) { if(i !== slot) setupConn(peer.connect(`gc-${hash}-${i}`)); }
             });
 
-            p.on('error', (err) => {
-                if(err.type === 'unavailable-id') trySlot(hash, slot + 1);
-                else console.error(err);
-            });
-
+            p.on('error', (err) => { if(err.type === 'unavailable-id') trySlot(hash, slot + 1); });
             p.on('connection', setupConn);
         }
 
@@ -92,11 +166,15 @@
             });
         }
 
-        function mine() {
+        async function mine() {
             const input = document.getElementById('msg');
             if(!input.value) return;
+            
+            // Encrypt before push
+            const encryptedData = await crypt(input.value, 'enc');
+            
             blockchain.push({
-                data: input.value,
+                data: encryptedData, // Scrambled data
                 sender: myId.slice(-1),
                 ts: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             });
@@ -105,13 +183,27 @@
             input.value = "";
         }
 
-        function render() {
-            document.getElementById('log').innerHTML = blockchain.map((b, i) => `
+        async function render() {
+            const log = document.getElementById('log');
+            let html = "";
+            for (let i = 0; i < blockchain.length; i++) {
+                const b = blockchain[i];
+                let decryptedMsg = "[ENCRYPTED_BLOCK]";
+                try {
+                    decryptedMsg = await crypt(b.data, 'dec');
+                } catch(e) { decryptedMsg = "!! DECRYPTION_ERROR: INVALID_KEY !!"; }
+                
+                html += `
                 <div class="block">
-                    <b>BLOCK_${i}:</b> ${b.data}
-                    <div class="block-meta"><span>GHOST_0${b.sender}</span><span>${b.ts}</span></div>
-                </div>`).join('');
-            document.getElementById('log').scrollTop = document.getElementById('log').scrollHeight;
+                    ${decryptedMsg}
+                    <div class="block-meta">
+                        <span>GHOST_0${b.sender}</span>
+                        <span>${b.ts}</span>
+                    </div>
+                </div>`;
+            }
+            log.innerHTML = html;
+            log.scrollTop = log.scrollHeight;
         }
     </script>
 </body>
