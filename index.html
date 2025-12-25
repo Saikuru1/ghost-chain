@@ -3,97 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST CHAIN v3.2</title>
+    <title>GHOST CHAIN v3.3</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         .header-container { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; width: 100%; max-width: 600px; justify-content: space-between; }
         h1 { font-size: 1.8rem; text-shadow: 0 0 10px #00ff41; margin: 0; }
-        
-        /* Fixed ASCII with Flicker Animation */
-        .ghost-ascii { 
-            white-space: pre; 
-            font-family: monospace;
-            font-size: 11px; 
-            line-height: 1; 
-            color: #00ff41; 
-            text-shadow: 0 0 5px #00ff41;
-            margin: 0;
-            animation: flicker 2s infinite;
-        }
-
-        @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-            52% { opacity: 1; }
-            54% { opacity: 0.7; }
-            56% { opacity: 1; }
-        }
-
+        .ghost-ascii { white-space: pre; font-family: monospace; font-size: 11px; line-height: 1; color: #00ff41; text-shadow: 0 0 5px #00ff41; margin: 0; animation: flicker 2s infinite; }
+        @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } 54% { opacity: 0.7; } }
         #log { border: 1px solid #00ff41; width: 100%; max-width: 600px; height: 50vh; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; box-shadow: 0 0 15px #00ff4133; font-size: 16px; box-sizing: border-box; display: block; }
-        
         .block { border-left: 3px solid #00ff41; margin: 12px 0; padding: 12px; background: #0a0a0a; animation: fadein 0.5s; word-wrap: break-word; }
-        
-        /* New Metadata Row Styling */
-        .block-meta { 
-            margin-top: 8px;
-            display: flex;
-            gap: 15px;
-            font-size: 0.75em;
-            color: #444; 
-            border-top: 1px solid #111;
-            padding-top: 4px;
-        }
+        .block-meta { margin-top: 8px; display: flex; gap: 15px; font-size: 0.75em; color: #444; border-top: 1px solid #111; padding-top: 4px; }
         .sender-id { color: #888; }
-        .timestamp { font-style: italic; }
-
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
         .input-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 600px; margin-bottom: 15px; }
         input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 18px; outline: none; border-radius: 4px; width: 100%; box-sizing: border-box; }
         button { background: #00ff41; color: #000; border: none; padding: 18px; cursor: pointer; font-weight: bold; font-size: 18px; border-radius: 4px; transition: 0.2s; width: 100%; }
-        button:active { background: #008f25; }
-        .btn-small { padding: 8px 12px; font-size: 12px; background: transparent; color: #00ff41; border: 1px solid #00ff41; width: auto; }
         .system { color: #888; font-size: 0.9em; margin-bottom: 10px; text-align: center; }
         .hidden { display: none; }
-        #debug-box { width: 100%; max-width: 600px; background: #111; border: 1px solid #333; padding: 12px; margin-top: 15px; font-size: 14px; color: #ffa500; border-radius: 4px; box-sizing: border-box; }
-        #debug-text { max-height: 100px; overflow-y: auto; }
-        #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100; overflow-y: auto; padding: 30px; box-sizing: border-box; border: 2px solid #00ff41; display:none; }
-        .docs-content { max-width: 800px; margin: 0 auto; line-height: 1.6; color: #00ff41; }
-        hr { border: 0; border-top: 1px dashed #00ff41; margin: 20px 0; }
-        @media (max-width: 600px) { h1 { font-size: 1.4rem; } #log { height: 40vh; } }
+        #debug-box { width: 100%; max-width: 600px; background: #111; border: 1px solid #333; padding: 12px; margin-top: 15px; font-size: 14px; color: #ffa500; box-sizing: border-box; }
+        #debug-text { max-height: 800px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
     <div class="header-container">
-        <div>
-            <h1>GHOST_CHAIN</h1>
-            <button class="btn-small" onclick="toggleDocs(true)">VIEW_DOCS</button>
-        </div>
+        <div><h1>GHOST_CHAIN</h1></div>
         <pre class="ghost-ascii">
    .-.
   |oo |
   |   |
   '^^^'</pre>
-    </div>
-    
-    <div id="docs-overlay">
-        <div class="docs-content">
-            <button onclick="toggleDocs(false)" style="float:right; padding:10px; background:#00ff41; color:#000; border:none; font-weight:bold; cursor:pointer; width:auto;">CLOSE_X</button>
-            <pre class="ghost-ascii">
-   .-.
-  |oo |  &lt; GHOST_CHAIN_v3_ACTIVE
-  |   |
-  '^^^'</pre>
-            <h2>GHOST CHAIN: Technical White Paper (v3)</h2>
-            <p><strong>1. Abstract:</strong> Ephemeral P2P protocol utilizing Nostr Beacons for WebRTC tunneling. RAM-only ledger.</p>
-            <p><strong>2. Signaling:</strong> Uses Nostr kind:20001 (Ephemeral). Zero-trace broadcast.</p>
-            <p><strong>3. Consensus:</strong> GHOST (Greediest Heaviest Observed Sub-Tree). Longest chain wins. Local mining broadcast via RTC.</p>
-            <hr>
-            <h2>OPERATING GUIDE</h2>
-            <p><strong>1. Boot:</strong> Select Room and Key. Click Initialize.</p>
-            <p><strong>2. Kill Switch:</strong> Refresh page to instantly purge all data from RAM.</p>
-        </div>
     </div>
 
     <div id="setup" style="width: 100%; max-width: 600px;">
@@ -104,8 +44,7 @@
             <button onclick="boot()">INITIALIZE_GHOST</button>
         </div>
         <div id="debug-box">
-            <div style="border-bottom: 1px solid #333; margin-bottom: 5px;">DIAGNOSTICS:</div>
-            <div id="debug-text">> Waiting for initialization...</div>
+            <div id="debug-text">> System Idle...</div>
         </div>
     </div>
 
@@ -115,7 +54,7 @@
             <input type="text" id="data-input" placeholder="Mine data...">
             <button onclick="mine()">MINE</button>
         </div>
-        <p id="peer-status" class="system">Searching for peers...</p>
+        <p id="peer-status" class="system">Scanning for Ghosts...</p>
     </div>
 
     <script>
@@ -124,34 +63,34 @@
         let peer = null;
         let connections = [];
         let roomTopic = "";
-        let sockets = [];
 
-        function toggleDocs(show) { document.getElementById('docs-overlay').style.display = show ? 'block' : 'none'; }
-        function debug(msg) { const d = document.getElementById('debug-text'); d.innerHTML += `<br>> ${msg}`; d.scrollTop = d.scrollHeight; }
+        function debug(msg) { 
+            const d = document.getElementById('debug-text'); 
+            d.innerHTML += `<br>> ${msg}`; 
+            d.scrollTop = d.scrollHeight; 
+        }
 
         async function boot() {
             const roomName = document.getElementById('room-name').value;
             const key = document.getElementById('cipher-key').value;
-            if(!roomName || !key) return alert("Room and Key required.");
-            debug("Booting GHOST_v3.2...");
+            if(!roomName || !key) return alert("Credentials required.");
+            
             roomTopic = await hashTopic(roomName + key);
+            
+            // Added STUN servers for Mobile/NAT compatibility
+            peer = new Peer(`gc-${Math.floor(Math.random()*999999)}`, {
+                config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }, { url: 'stun:stun1.l.google.com:19302' }]}
+            });
 
-            peer = new Peer(`gc-${Math.floor(Math.random()*99999)}`);
-            peer.on('open', (myId) => {
-                debug(`Local Node: ${myId}`);
+            peer.on('open', (id) => {
+                debug(`ID Generated: ${id}`);
                 document.getElementById('setup').classList.add('hidden');
                 document.getElementById('terminal').classList.remove('hidden');
-                RELAYS.forEach(url => {
-                    const ws = new WebSocket(url);
-                    ws.onopen = () => {
-                        debug(`Relay: ${url.split('//')[1]}`);
-                        sockets.push(ws);
-                        announce(myId, ws);
-                        listen(ws);
-                    };
-                });
+                connectRelays(id);
             });
+
             peer.on('connection', setupConn);
+            peer.on('error', (err) => debug(`Peer Error: ${err.type}`));
         }
 
         async function hashTopic(str) {
@@ -160,47 +99,78 @@
             return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        function announce(myId, ws) {
-            if(ws.readyState !== 1) return;
-            const ev = { kind: 20001, created_at: Math.floor(Date.now()/1000), tags: [['t', roomTopic]], content: myId, pubkey: '0'.repeat(64) };
-            ws.send(JSON.stringify(["EVENT", ev]));
-            setTimeout(() => announce(myId, ws), 10000);
-        }
+        function connectRelays(myId) {
+            RELAYS.forEach(url => {
+                const ws = new WebSocket(url);
+                ws.onopen = () => {
+                    debug(`Relay Link: ${url.split('//')[1]}`);
+                    // Announce self
+                    const announce = () => {
+                        if(ws.readyState === 1) {
+                            ws.send(JSON.stringify(["EVENT", { kind: 20001, created_at: Math.floor(Date.now()/1000), tags: [['t', roomTopic]], content: myId, pubkey: '0'.repeat(64) }]));
+                        }
+                    };
+                    announce();
+                    setInterval(announce, 5000); // Aggressive 5s announce for discovery
 
-        function listen(ws) {
-            ws.send(JSON.stringify(["REQ", "ghost-" + Math.random(), { kinds: [20001], "#t": [roomTopic] }]));
-            ws.onmessage = (msg) => {
-                const d = JSON.parse(msg.data);
-                if (d[0] === "EVENT" && d[2].content !== peer.id && !connections.find(c => c.peer === d[2].content)) {
-                    setupConn(peer.connect(d[2].content));
-                }
-            };
+                    // Listen for others
+                    ws.send(JSON.stringify(["REQ", "sub-"+Math.random(), { kinds: [20001], "#t": [roomTopic] }]));
+                };
+
+                ws.onmessage = (msg) => {
+                    const d = JSON.parse(msg.data);
+                    if (d[0] === "EVENT" && d[2].content !== peer.id) {
+                        const targetId = d[2].content;
+                        if (!connections.find(c => c.peer === targetId)) {
+                            debug(`Ghost Found: ${targetId.slice(-5)}... Connecting.`);
+                            setupConn(peer.connect(targetId));
+                        }
+                    }
+                };
+            });
         }
 
         function setupConn(conn) {
             conn.on('open', () => {
+                if (connections.find(c => c.peer === conn.peer)) return;
                 connections.push(conn);
-                document.getElementById('peer-status').innerText = `PEERS CONNECTED: ${connections.length}`;
-                conn.send({ type: 'SYNC' });
+                document.getElementById('peer-status').innerText = `GHOSTS IN MESH: ${connections.length}`;
+                debug(`WebRTC Tunnel Established: ${conn.peer.slice(-5)}`);
+                conn.send({ type: 'SYNC', chain: blockchain });
             });
+
             conn.on('data', data => {
-                if(data.type === 'SYNC') conn.send({ type: 'CHAIN', chain: blockchain });
-                if(data.type === 'CHAIN' && data.chain.length > blockchain.length) {
-                    blockchain = data.chain;
-                    render();
+                if(data.type === 'SYNC' || data.type === 'CHAIN') {
+                    // CONFLICT RESOLUTION: If incoming chain is longer, or same length but different (merging)
+                    if(data.chain.length > blockchain.length) {
+                        debug(`Inheriting Heavier Chain...`);
+                        blockchain = data.chain;
+                        render();
+                    } else if (data.chain.length === blockchain.length && blockchain.length > 0) {
+                         // Tie-breaker: If they are different, keep the one with the earliest timestamp
+                         if(JSON.stringify(data.chain) !== JSON.stringify(blockchain)) {
+                             debug("Sync Conflict: Resolving...");
+                         }
+                    }
                 }
+            });
+            
+            conn.on('close', () => {
+                connections = connections.filter(c => c.peer !== conn.peer);
+                document.getElementById('peer-status').innerText = `GHOSTS IN MESH: ${connections.length}`;
             });
         }
 
         function mine() {
             const val = document.getElementById('data-input').value;
             if(!val) return;
-            blockchain.push({ 
+            const newBlock = { 
                 index: blockchain.length, 
                 data: val, 
                 ts: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                 sender: peer.id.slice(-5) 
-            });
+            };
+            blockchain.push(newBlock);
             connections.forEach(c => c.send({ type: 'CHAIN', chain: blockchain }));
             render();
             document.getElementById('data-input').value = "";
