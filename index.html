@@ -3,19 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST CHAIN v3.7</title>
+    <title>GHOST CHAIN v3.9</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Fixed ASCII Header */
-        .ghost-ascii { white-space: pre; font-size: 14px; line-height: 1.1; color: #00ff41; text-shadow: 0 0 8px #00ff41; width: fit-content; margin: 0 auto 10px; text-align: left; cursor: pointer; }
+        /* Centered Block, Left-Aligned Internal ASCII */
+        .ghost-ascii { 
+            white-space: pre; 
+            font-size: 14px; 
+            line-height: 1.1; 
+            color: #00ff41; 
+            text-shadow: 0 0 8px #00ff41; 
+            width: fit-content; 
+            margin: 0 auto 10px; 
+            text-align: left; 
+            cursor: pointer; 
+        }
         
         .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: stretch; }
         
         #log { 
             border: 1px solid #00ff41; 
-            height: 55vh; 
+            height: 50vh; 
             overflow-y: auto; 
             padding: 10px; 
             background: #000; 
@@ -24,7 +34,6 @@
             box-sizing: border-box; 
         }
 
-        /* Tightened Block Styling */
         .block { 
             border-left: 2px solid #00ff41; 
             margin: 8px 0; 
@@ -33,8 +42,10 @@
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: pre-wrap;
-            min-height: auto; /* Fix for the height issue */
+            animation: emerge 0.3s ease-out;
         }
+
+        @keyframes emerge { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
 
         .block-meta { 
             display: flex; 
@@ -48,15 +59,20 @@
 
         .input-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
         input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 16px; outline: none; width: 100%; box-sizing: border-box; }
-        button { background: #00ff41; color: #000; border: none; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px; width: 100%; }
+        
+        button { background: #00ff41; color: #000; border: none; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
+        button:active { background: #008f11; }
+        
+        .btn-scrub { background: #111; color: #ff4141; border: 1px solid #ff4141; margin-top: 5px; font-size: 12px; padding: 8px; }
+        .btn-scrub:hover { background: #ff4141; color: #000; }
         
         .btn-docs { background: transparent; color: #00ff41; border: 1px solid #00ff41; font-size: 10px; padding: 4px 8px; margin-bottom: 15px; width: auto; align-self: center; cursor: pointer; }
 
-        #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 100; overflow-y: auto; padding: 30px; display:none; box-sizing: border-box; }
-        .docs-content { max-width: 600px; margin: 0 auto; color: #00ff41; border: 1px solid #00ff41; padding: 20px; background: #000; line-height: 1.5; }
+        #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100; overflow-y: auto; padding: 30px; display:none; box-sizing: border-box; }
+        .docs-content { max-width: 650px; margin: 0 auto; color: #00ff41; border: 1px solid #00ff41; padding: 25px; background: #000; line-height: 1.6; }
 
         .hidden { display: none; }
-        #status { color: #444; font-size: 0.75em; text-align: center; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        #status { color: #444; font-size: 0.75em; text-align: center; margin-top: 10px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -68,7 +84,7 @@
   |   |
   '^^^'</pre>
         
-        <button class="btn-docs" onclick="toggleDocs(true)">WHITE_PAPER</button>
+        <button class="btn-docs" onclick="toggleDocs(true)">SYSTEM_MANUAL_v3.9</button>
 
         <div id="setup">
             <div class="input-group">
@@ -83,22 +99,25 @@
             <div class="input-group">
                 <input type="text" id="msg" placeholder="Write to ledger..." onkeypress="if(event.key==='Enter') mine()">
                 <button onclick="mine()">MINE_BLOCK</button>
+                <button class="btn-scrub" onclick="scrubSelf()">✨ SCRUB_MY_HISTORY</button>
             </div>
-            <div id="status">Syncing mesh nodes...</div>
+            <div id="status">Establishing mesh...</div>
         </div>
     </div>
 
     <div id="docs-overlay">
         <div class="docs-content">
-            <button onclick="toggleDocs(false)" style="float:right; width:auto; padding:5px; background:#00ff41; color:#000; font-weight:bold; border:none; cursor:pointer;">CLOSE</button>
-            <h2 style="margin-top:0;">GHOST_CHAIN_WHITE_PAPER</h2>
-            <hr style="border:0; border-top:1px dashed #00ff41;">
-            <p><strong>ABSTRACT:</strong> An ephemeral, decentralized communication protocol designed for zero-trace data exchange. Ghost Chain exists solely in volatile memory (RAM).</p>
-            <p><strong>SIGNALING:</strong> Utilizes deterministic SHA-256 peer-id derivation to eliminate the need for centralized discovery relays.</p>
-            <p><strong>SECURITY:</strong> Mandatory end-to-end encryption via AES-256-GCM. Payloads are encrypted locally before transmission. The Secret Key is never broadcast.</p>
-            <p><strong>PERSISTENCE:</strong> Non-existent. Closing the browser tab acts as a hardware-level kill switch, permanently erasing all ledger history.</p>
-            <hr style="border:0; border-top:1px dashed #00ff41;">
-            <p style="font-size: 0.8em; text-align: center;">V3.7 // STABLE_RELEASE</p>
+            <button onclick="toggleDocs(false)" style="float:right; padding:5px; background:#00ff41; color:#000; border:none; cursor:pointer; font-weight:bold;">CLOSE</button>
+            <h2 style="text-align:center;">GHOST_CHAIN_v3.9</h2>
+            <hr style="border:1px dashed #00ff41;">
+            <h3>SOVEREIGN REDACTION PROTOCOL</h3>
+            <p>Ghost Chain v3.9 introduces the <strong>Targeted Scrubbing</strong> mechanism. This ensures that while the network remains resilient, the individual ghost maintains absolute sovereignty over their data footprint.</p>
+            <ul>
+                <li><strong>Total Disappearance:</strong> Scrubbing doesn't just hide messages; it filters them out of the active blockchain array in every peer's RAM.</li>
+                <li><strong>Broadcast Redaction:</strong> When a scrub is triggered, a high-priority packet is sent to the mesh, instructing all nodes to expunge blocks tied to your specific Ghost ID.</li>
+                <li><strong>Deterministic Security:</strong> All payloads remain protected by AES-256-GCM. Redaction occurs at the state level, ensuring no "tombstones" or metadata remain.</li>
+            </ul>
+            <p style="font-size:0.8em; color:#444; text-align:center;">RAM-ONLY // NO PERSISTENCE // E2EE</p>
         </div>
     </div>
 
@@ -111,10 +130,7 @@
             const room = document.getElementById('room').value;
             rawKey = document.getElementById('key').value;
             if(!room || !rawKey) return;
-
-            const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(room + rawKey))))
-                         .map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 10);
-            
+            const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(room + rawKey)))).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 10);
             trySlot(hash, 1);
         }
 
@@ -122,7 +138,6 @@
             const enc = new TextEncoder();
             const keyHash = await crypto.subtle.digest('SHA-256', enc.encode(rawKey));
             const key = await crypto.subtle.importKey('raw', keyHash, 'AES-GCM', false, ['encrypt', 'decrypt']);
-            
             if(mode === 'enc') {
                 const iv = crypto.getRandomValues(new Uint8Array(12));
                 const cipher = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, enc.encode(text));
@@ -136,7 +151,6 @@
         function trySlot(hash, slot) {
             const testId = `gc-${hash}-${slot}`;
             const p = new Peer(testId, { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }] }});
-            
             p.on('open', (id) => {
                 peer = p; myId = id;
                 document.getElementById('setup').classList.add('hidden');
@@ -144,7 +158,6 @@
                 document.getElementById('status').innerText = `NODE: SLOT_${slot} | E2EE_ACTIVE`;
                 for(let i=1; i<=8; i++) { if(i !== slot) setupConn(peer.connect(`gc-${hash}-${i}`)); }
             });
-
             p.on('error', (err) => { if(err.type === 'unavailable-id') trySlot(hash, slot + 1); });
             p.on('connection', setupConn);
         }
@@ -157,22 +170,35 @@
                 conn.send({ type: 'SYNC', chain: blockchain });
             });
             conn.on('data', data => {
-                if(data.chain && data.chain.length > blockchain.length) {
+                if(data.type === 'SCRUB') {
+                    executeScrub(data.targetId);
+                } else if(data.chain && data.chain.length > blockchain.length) {
                     blockchain = data.chain;
                     render();
                 }
             });
         }
 
+        function scrubSelf() {
+            if(!confirm("EXPUNGE HISTORY: This will delete your blocks from ALL peers. Proceed?")) return;
+            const targetId = myId.slice(-1);
+            connections.forEach(c => c.send({ type: 'SCRUB', targetId: targetId }));
+            executeScrub(targetId);
+        }
+
+        function executeScrub(idToWipe) {
+            blockchain = blockchain.filter(b => b.sender !== idToWipe);
+            render();
+            document.getElementById('status').innerText = `EXPUNGED: GHOST_0${idToWipe}`;
+            // Re-broadcast clean chain to new peers
+            connections.forEach(c => c.send({ type: 'CHAIN', chain: blockchain }));
+        }
+
         async function mine() {
             const input = document.getElementById('msg');
             if(!input.value) return;
             const encryptedData = await crypt(input.value, 'enc');
-            blockchain.push({
-                data: encryptedData,
-                sender: myId.slice(-1),
-                ts: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-            });
+            blockchain.push({ data: encryptedData, sender: myId.slice(-1), ts: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
             connections.forEach(c => c.send({ type: 'CHAIN', chain: blockchain }));
             render();
             input.value = "";

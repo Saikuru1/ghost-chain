@@ -3,220 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST CHAIN</title>
+    <title>GHOST CHAIN v3.7</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Flex container for Header */
-        .header-container { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; width: 100%; max-width: 600px; justify-content: space-between; }
+        /* Fixed ASCII Header */
+        .ghost-ascii { white-space: pre; font-size: 14px; line-height: 1.1; color: #00ff41; text-shadow: 0 0 8px #00ff41; width: fit-content; margin: 0 auto 10px; text-align: left; cursor: pointer; }
         
-        h1 { font-size: 1.8rem; text-shadow: 0 0 10px #00ff41; margin: 0; }
-        .ghost-ascii { white-space: pre; font-size: 10px; line-height: 10px; color: #00ff41; text-shadow: 0 0 5px #00ff41; }
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: stretch; }
         
-        /* RESOLUTION: Full-Width Interface - Board is forced to 100% width immediately */
         #log { 
             border: 1px solid #00ff41; 
-            width: 100%; 
-            max-width: 600px; 
-            height: 50vh; 
+            height: 55vh; 
             overflow-y: auto; 
-            padding: 15px; 
+            padding: 10px; 
             background: #000; 
-            margin-bottom: 20px; 
-            box-shadow: 0 0 15px #00ff4133; 
-            font-size: 16px; 
-            box-sizing: border-box; /* Prevents padding from causing overflow */
-            display: block; 
+            margin-bottom: 15px; 
+            box-shadow: 0 0 15px #00ff4133;
+            box-sizing: border-box; 
         }
 
-        .block { border-left: 3px solid #00ff41; margin: 12px 0; padding: 12px; background: #0a0a0a; animation: fadein 0.5s; word-wrap: break-word; }
-        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-        
-        .input-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 600px; margin-bottom: 15px; }
-        input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 18px; outline: none; border-radius: 4px; width: 100%; box-sizing: border-box; }
-        button { background: #00ff41; color: #000; border: none; padding: 18px; cursor: pointer; font-weight: bold; font-size: 18px; border-radius: 4px; transition: 0.2s; width: 100%; }
-        button:active { background: #008f25; }
-        
-        .btn-small { padding: 8px 12px; font-size: 12px; background: transparent; color: #00ff41; border: 1px solid #00ff41; width: auto; }
+        /* Tightened Block Styling */
+        .block { 
+            border-left: 2px solid #00ff41; 
+            margin: 8px 0; 
+            padding: 8px 12px; 
+            background: #0a0a0a; 
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            min-height: auto; /* Fix for the height issue */
+        }
 
-        .system { color: #888; font-size: 0.9em; margin-bottom: 10px; text-align: center; }
+        .block-meta { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.7em; 
+            color: #333; 
+            margin-top: 6px; 
+            border-top: 1px solid #111; 
+            padding-top: 2px; 
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 16px; outline: none; width: 100%; box-sizing: border-box; }
+        button { background: #00ff41; color: #000; border: none; padding: 15px; cursor: pointer; font-weight: bold; font-size: 16px; width: 100%; }
+        
+        .btn-docs { background: transparent; color: #00ff41; border: 1px solid #00ff41; font-size: 10px; padding: 4px 8px; margin-bottom: 15px; width: auto; align-self: center; cursor: pointer; }
+
+        #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 100; overflow-y: auto; padding: 30px; display:none; box-sizing: border-box; }
+        .docs-content { max-width: 600px; margin: 0 auto; color: #00ff41; border: 1px solid #00ff41; padding: 20px; background: #000; line-height: 1.5; }
+
         .hidden { display: none; }
-        
-        /* Diagnostics & Docs Overlay */
-        #debug-box { width: 100%; max-width: 600px; background: #111; border: 1px solid #333; padding: 12px; margin-top: 15px; font-size: 14px; color: #ffa500; border-radius: 4px; box-sizing: border-box; }
-        #debug-text { max-height: 100px; overflow-y: auto; }
-        
-        #docs-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100; overflow-y: auto; padding: 30px; box-sizing: border-box; border: 2px solid #00ff41; display:none; }
-        .docs-content { max-width: 800px; margin: 0 auto; line-height: 1.6; color: #00ff41; }
-        hr { border: 0; border-top: 1px dashed #00ff41; margin: 20px 0; }
-
-        /* Mobile specific adjustments */
-        @media (max-width: 600px) {
-            h1 { font-size: 1.4rem; }
-            #log { height: 40vh; }
-        }
+        #status { color: #444; font-size: 0.75em; text-align: center; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-    <div class="header-container">
-        <div>
-            <h1>GHOST_CHAIN</h1>
-            <button class="btn-small" onclick="toggleDocs(true)">VIEW_DOCS</button>
+    <div class="container">
+        <pre class="ghost-ascii" onclick="toggleDocs(true)">
+   .-.
+  |oo |
+  |   |
+  '^^^'</pre>
+        
+        <button class="btn-docs" onclick="toggleDocs(true)">WHITE_PAPER</button>
+
+        <div id="setup">
+            <div class="input-group">
+                <input type="text" id="room" placeholder="ROOM_IDENTIFIER">
+                <input type="password" id="key" placeholder="SECRET_CIPHER_KEY">
+                <button onclick="boot()">INITIALIZE_GHOST</button>
+            </div>
         </div>
-        <div class="ghost-ascii">
- .-.
-|oo |
-|   |
-'^^^'
+
+        <div id="terminal" class="hidden">
+            <div id="log"></div>
+            <div class="input-group">
+                <input type="text" id="msg" placeholder="Write to ledger..." onkeypress="if(event.key==='Enter') mine()">
+                <button onclick="mine()">MINE_BLOCK</button>
+            </div>
+            <div id="status">Syncing mesh nodes...</div>
         </div>
     </div>
-    
+
     <div id="docs-overlay">
         <div class="docs-content">
-            <button onclick="toggleDocs(false)" style="float:right; padding:10px; background:#00ff41; color:#000; border:none; font-weight:bold; cursor:pointer; width:auto;">CLOSE_X</button>
-            <pre class="ghost-ascii" style="font-size: 14px; line-height: 14px;">
-      .-.
-     |oo |  < GHOST_CHAIN_ACTIVE
-     |   |
-     '^^^'
-            </pre>
-            <h2>GHOST CHAIN: A Technical White Paper</h2>
-            <p><strong>1. Abstract:</strong> Ghost Chain is an ephemeral Peer-to-Peer (P2P) protocol that utilizes a "Lighthouse" discovery mechanism to establish encrypted WebRTC tunnels between nodes. Unlike traditional blockchains that prioritize permanent storage, Ghost Chain prioritizes memory-only persistence.</p>
-            <p><strong>2. The Signaling Layer:</strong> Ghost Chain solves NAT traversal using a GitHub Gist as a Beacon (Lighthouse). Nodes post a randomized Peer ID, prefixed with a Room Hash, to a hidden Gist. Every 10 seconds, a scanBeacon operation pulls the latest IDs. A GitHub Action (Janitor) wipes the Gist daily to ensure zero-trace operation.</p>
-            <p><strong>3. Consensus:</strong> Uses a simplified GHOST protocol. Longest Chain Wins: When peers connect, they adopt the longer chain as the "Truth." Mining refers to local block creation broadcast via WebRTC.</p>
-            <p><strong>4. Security:</strong> Room names are Base64 hashed (Unique Frequency). Transport uses mandatory WebRTC DTLS encryption. Application-level secrecy supports AES-GCM encryption via the Secret Key.</p>
-            <p><strong>5. Persistence:</strong> Zero-Knowledge Hosting. Volatile Memory storage (RAM-only). Never written to Disk, LocalStorage, or Cookies.</p>
-            <hr>
-            <h2>GHOST CHAIN: USER OPERATING GUIDE</h2>
-            <p><strong>1. Prerequisites:</strong> You need the Access URL and a PAT with Gist authorization.</p>
-            <p><strong>2. Initializing:</strong> Select a Room Name (shared frequency) and a Secret Key (encryption). Paste your PAT and click INITIALIZE_GHOST.</p>
-            <p><strong>3. Communication:</strong> Once connected, type data and click MINE. The new block is broadcast directly into your peer's browser RAM.</p>
-            <p><strong>4. The Kill Switch:</strong> Closing the tab or refreshing acting as a master purge, instantly erasing the local ledger.</p>
-            <hr>
-            <h3>OBTAINING PAT: YOUR GHOST PASSWORD</h3>
-            <p>1. GitHub Settings > Developer Settings > Tokens (classic).<br>
-            2. Generate new token (classic).<br>
-            3. Select <b>[x] gist</b> scope ONLY.<br>
-            4. Copy the ghp_ string and paste it into the terminal.</p>
+            <button onclick="toggleDocs(false)" style="float:right; width:auto; padding:5px; background:#00ff41; color:#000; font-weight:bold; border:none; cursor:pointer;">CLOSE</button>
+            <h2 style="margin-top:0;">GHOST_CHAIN_WHITE_PAPER</h2>
+            <hr style="border:0; border-top:1px dashed #00ff41;">
+            <p><strong>ABSTRACT:</strong> An ephemeral, decentralized communication protocol designed for zero-trace data exchange. Ghost Chain exists solely in volatile memory (RAM).</p>
+            <p><strong>SIGNALING:</strong> Utilizes deterministic SHA-256 peer-id derivation to eliminate the need for centralized discovery relays.</p>
+            <p><strong>SECURITY:</strong> Mandatory end-to-end encryption via AES-256-GCM. Payloads are encrypted locally before transmission. The Secret Key is never broadcast.</p>
+            <p><strong>PERSISTENCE:</strong> Non-existent. Closing the browser tab acts as a hardware-level kill switch, permanently erasing all ledger history.</p>
+            <hr style="border:0; border-top:1px dashed #00ff41;">
+            <p style="font-size: 0.8em; text-align: center;">V3.7 // STABLE_RELEASE</p>
         </div>
-    </div>
-
-    <div id="setup" style="width: 100%; max-width: 600px;">
-        <p class="system">STATUS: <span id="conn-status" style="color: yellow;">OFFLINE</span></p>
-        <div class="input-group">
-            <input type="text" id="room-name" placeholder="Room Name (e.g. Sector-7)">
-            <input type="password" id="cipher-key" placeholder="Secret Key">
-            <input type="password" id="gh-token" placeholder="GitHub Token (ghp_...)">
-            <button onclick="boot()">INITIALIZE_GHOST</button>
-        </div>
-
-        <div id="debug-box">
-            <div style="border-bottom: 1px solid #333; margin-bottom: 5px;">DIAGNOSTICS:</div>
-            <div id="debug-text">> Waiting for initialization...</div>
-        </div>
-    </div>
-
-    <div id="terminal" class="hidden" style="width: 100%; max-width: 600px;">
-        <div id="log"></div>
-        <div class="input-group">
-            <input type="text" id="data-input" placeholder="Enter data to mine...">
-            <button onclick="mine()">MINE</button>
-        </div>
-        <p id="peer-status" class="system">Searching for peers...</p>
     </div>
 
     <script>
-        const GIST_ID = "5140e07429751db7d768ab274e3e8e2a";
-        let blockchain = [];
-        let peer = null;
-        let connections = [];
-        let myRoomHash = "";
+        let blockchain = [], connections = [], peer = null, myId = "", rawKey = "";
 
-        function toggleDocs(show) {
-            document.getElementById('docs-overlay').style.display = show ? 'block' : 'none';
-        }
-
-        function debug(msg) {
-            const d = document.getElementById('debug-text');
-            d.innerHTML += `<br>> ${msg}`;
-            d.scrollTop = d.scrollHeight;
-        }
+        function toggleDocs(show) { document.getElementById('docs-overlay').style.display = show ? 'block' : 'none'; }
 
         async function boot() {
-            const token = document.getElementById('gh-token').value;
-            const roomName = document.getElementById('room-name').value;
-            const pass = document.getElementById('cipher-key').value;
-            const statusLabel = document.getElementById('conn-status');
+            const room = document.getElementById('room').value;
+            rawKey = document.getElementById('key').value;
+            if(!room || !rawKey) return;
 
-            if(!roomName || !pass || !token) return alert("All fields are required.");
+            const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(room + rawKey))))
+                         .map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 10);
             
-            statusLabel.innerText = "STARTING...";
-            debug("Initializing Ghost Protocol...");
-            
-            try {
-                myRoomHash = btoa(roomName).replace(/[^a-zA-Z0-9]/g, "").substring(0, 8);
-                peer = new Peer(`gc-${myRoomHash}-${Math.floor(Math.random()*10000)}`);
-                
-                peer.on('open', async (myId) => {
-                    debug(`Local Node Live: ${myId}`);
-                    statusLabel.innerText = "UPDATING BEACON...";
-                    const success = await updateBeacon(token, myId);
-                    if(success) {
-                        debug("Beacon set. Ghost Materialized.");
-                        document.getElementById('setup').classList.add('hidden');
-                        document.getElementById('terminal').classList.remove('hidden');
-                        setInterval(() => scanBeacon(token, myId), 10000);
-                    }
-                });
-
-                peer.on('error', err => debug(`PEER ERROR: ${err.type}`));
-                peer.on('connection', conn => {
-                    if (conn.peer.startsWith(`gc-${myRoomHash}`)) setupConn(conn);
-                });
-            } catch (err) { debug(`CRITICAL: ${err.message}`); }
+            trySlot(hash, 1);
         }
 
-        async function updateBeacon(token, myId) {
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                    headers: { 'Authorization': `token ${token}` }
-                });
-                const data = await res.json();
-                let peers = JSON.parse(data.files["ghost_discovery.json"].content);
-                if(!peers.includes(myId)) {
-                    peers.push(myId);
-                    await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                        method: 'PATCH',
-                        headers: { 'Authorization': `token ${token}` },
-                        body: JSON.stringify({ files: { "ghost_discovery.json": { content: JSON.stringify(peers) } } })
-                    });
-                }
-                return true;
-            } catch(e) { debug(`BEACON ERROR: ${e.message}`); return false; }
+        async function crypt(text, mode) {
+            const enc = new TextEncoder();
+            const keyHash = await crypto.subtle.digest('SHA-256', enc.encode(rawKey));
+            const key = await crypto.subtle.importKey('raw', keyHash, 'AES-GCM', false, ['encrypt', 'decrypt']);
+            
+            if(mode === 'enc') {
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const cipher = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, enc.encode(text));
+                return { c: Array.from(new Uint8Array(cipher)), i: Array.from(iv) };
+            } else {
+                const decrypt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: new Uint8Array(text.i)}, key, new Uint8Array(text.c));
+                return new TextDecoder().decode(decrypt);
+            }
         }
 
-        async function scanBeacon(token, myId) {
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`);
-                const data = await res.json();
-                const peers = JSON.parse(data.files["ghost_discovery.json"].content);
-                peers.forEach(p => {
-                    if(p !== myId && p.startsWith(`gc-${myRoomHash}`) && !connections.find(c => c.peer === p)) {
-                        debug(`Tunneling: ${p}`);
-                        setupConn(peer.connect(p));
-                    }
-                });
-            } catch(e) { console.log("Scan drift"); }
+        function trySlot(hash, slot) {
+            const testId = `gc-${hash}-${slot}`;
+            const p = new Peer(testId, { config: { 'iceServers': [{ url: 'stun:stun.l.google.com:19302' }] }});
+            
+            p.on('open', (id) => {
+                peer = p; myId = id;
+                document.getElementById('setup').classList.add('hidden');
+                document.getElementById('terminal').classList.remove('hidden');
+                document.getElementById('status').innerText = `NODE: SLOT_${slot} | E2EE_ACTIVE`;
+                for(let i=1; i<=8; i++) { if(i !== slot) setupConn(peer.connect(`gc-${hash}-${i}`)); }
+            });
+
+            p.on('error', (err) => { if(err.type === 'unavailable-id') trySlot(hash, slot + 1); });
+            p.on('connection', setupConn);
         }
 
         function setupConn(conn) {
             conn.on('open', () => {
-                debug(`Tunnel Established: ${conn.peer}`);
+                if(connections.find(c => c.peer === conn.peer)) return;
                 connections.push(conn);
-                document.getElementById('peer-status').innerText = `PEERS CONNECTED: ${connections.length}`;
-                conn.send({ chain: blockchain });
+                document.getElementById('status').innerText = `MESH_ACTIVE: ${connections.length} PEERS`;
+                conn.send({ type: 'SYNC', chain: blockchain });
             });
             conn.on('data', data => {
                 if(data.chain && data.chain.length > blockchain.length) {
@@ -226,29 +164,30 @@
             });
         }
 
-        function mine() {
-            const val = document.getElementById('data-input').value;
-            if(!val) return;
-            blockchain.push({ 
-                index: blockchain.length, 
-                data: val, 
-                ts: new Date().toLocaleTimeString(),
-                ghostId: peer.id.slice(-4)
+        async function mine() {
+            const input = document.getElementById('msg');
+            if(!input.value) return;
+            const encryptedData = await crypt(input.value, 'enc');
+            blockchain.push({
+                data: encryptedData,
+                sender: myId.slice(-1),
+                ts: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             });
-            connections.forEach(c => c.send({ chain: blockchain }));
+            connections.forEach(c => c.send({ type: 'CHAIN', chain: blockchain }));
             render();
-            document.getElementById('data-input').value = "";
+            input.value = "";
         }
 
-        function render() {
-            const logDiv = document.getElementById('log');
-            logDiv.innerHTML = blockchain.map(b => `
-                <div class="block">
-                    <b>BLOCK_${b.index}:</b> ${b.data}
-                    <div style="font-size:0.7em; margin-top:5px; color:#444;">GHOST: ${b.ghostId || 'VOID'} | TIME: ${b.ts}</div>
-                </div>
-            `).join('');
-            logDiv.scrollTop = logDiv.scrollHeight;
+        async function render() {
+            const log = document.getElementById('log');
+            let html = "";
+            for (let b of blockchain) {
+                let msg = "[ENCRYPTED]";
+                try { msg = await crypt(b.data, 'dec'); } catch(e) { msg = "!! DECRYPTION_ERROR !!"; }
+                html += `<div class="block">${msg}<div class="block-meta"><span>GHOST_0${b.sender}</span><span>${b.ts}</span></div></div>`;
+            }
+            log.innerHTML = html;
+            log.scrollTop = log.scrollHeight;
         }
     </script>
 </body>
