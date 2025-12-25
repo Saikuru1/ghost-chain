@@ -3,16 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST CHAIN v3.1</title>
+    <title>GHOST CHAIN v3.2</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 15px; display: flex; flex-direction: column; align-items: center; }
         .header-container { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; width: 100%; max-width: 600px; justify-content: space-between; }
         h1 { font-size: 1.8rem; text-shadow: 0 0 10px #00ff41; margin: 0; }
-        .ghost-ascii { white-space: pre; font-size: 10px; line-height: 10px; color: #00ff41; text-shadow: 0 0 5px #00ff41; }
+        
+        /* Fixed ASCII with Flicker Animation */
+        .ghost-ascii { 
+            white-space: pre; 
+            font-family: monospace;
+            font-size: 11px; 
+            line-height: 1; 
+            color: #00ff41; 
+            text-shadow: 0 0 5px #00ff41;
+            margin: 0;
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+            52% { opacity: 1; }
+            54% { opacity: 0.7; }
+            56% { opacity: 1; }
+        }
+
         #log { border: 1px solid #00ff41; width: 100%; max-width: 600px; height: 50vh; overflow-y: auto; padding: 15px; background: #000; margin-bottom: 20px; box-shadow: 0 0 15px #00ff4133; font-size: 16px; box-sizing: border-box; display: block; }
+        
         .block { border-left: 3px solid #00ff41; margin: 12px 0; padding: 12px; background: #0a0a0a; animation: fadein 0.5s; word-wrap: break-word; }
-        .sender-id { color: #888; font-size: 0.7em; margin-bottom: 4px; display: block; }
+        
+        /* New Metadata Row Styling */
+        .block-meta { 
+            margin-top: 8px;
+            display: flex;
+            gap: 15px;
+            font-size: 0.75em;
+            color: #444; 
+            border-top: 1px solid #111;
+            padding-top: 4px;
+        }
+        .sender-id { color: #888; }
+        .timestamp { font-style: italic; }
+
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
         .input-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 600px; margin-bottom: 15px; }
         input { background: #000; color: #00ff41; border: 1px solid #00ff41; padding: 15px; font-size: 18px; outline: none; border-radius: 4px; width: 100%; box-sizing: border-box; }
@@ -36,32 +70,36 @@
             <h1>GHOST_CHAIN</h1>
             <button class="btn-small" onclick="toggleDocs(true)">VIEW_DOCS</button>
         </div>
-        <div class="ghost-ascii"> .-. |oo | |   | '^^^' </div>
+        <pre class="ghost-ascii">
+   .-.
+  |oo |
+  |   |
+  '^^^'</pre>
     </div>
     
     <div id="docs-overlay">
         <div class="docs-content">
             <button onclick="toggleDocs(false)" style="float:right; padding:10px; background:#00ff41; color:#000; border:none; font-weight:bold; cursor:pointer; width:auto;">CLOSE_X</button>
-            <pre class="ghost-ascii" style="font-size: 14px; line-height: 14px;"> .-. |oo | < GHOST_CHAIN_v3_ACTIVE | | '^^^' </pre>
-            <h2>GHOST CHAIN: A Technical White Paper (v3)</h2>
-            <p><strong>1. Abstract:</strong> Ghost Chain is an ephemeral Peer-to-Peer (P2P) protocol utilizing a decentralized "Lighthouse" discovery mechanism to establish encrypted WebRTC tunnels. It prioritizes volatile memory-only persistence.</p>
-            <p><strong>2. The Signaling Layer:</strong> Ghost Chain solves NAT traversal using Nostr Ephemeral Relays as a Beacon. Nodes broadcast randomized Peer IDs to a specific Frequency Hash. This ensures zero-trace operation without needing a manual Janitor script, as signaling events are broadcast-only and never stored.</p>
-            <p><strong>3. Consensus:</strong> Simplified GHOST protocol. Longest Chain Wins: Upon connection, peers perform a State Sync to adopt the longest chain. Mining refers to local block creation broadcast directly via WebRTC.</p>
-            <p><strong>4. Security:</strong> Frequency coordinates derived via SHA-256. Transport uses mandatory WebRTC DTLS encryption. Application-level secrecy supports AES-GCM via the Secret Key.</p>
-            <p><strong>5. Persistence:</strong> Zero-Knowledge Hosting. Storage is RAM-only. Never written to Disk, LocalStorage, or Cookies.</p>
+            <pre class="ghost-ascii">
+   .-.
+  |oo |  &lt; GHOST_CHAIN_v3_ACTIVE
+  |   |
+  '^^^'</pre>
+            <h2>GHOST CHAIN: Technical White Paper (v3)</h2>
+            <p><strong>1. Abstract:</strong> Ephemeral P2P protocol utilizing Nostr Beacons for WebRTC tunneling. RAM-only ledger.</p>
+            <p><strong>2. Signaling:</strong> Uses Nostr kind:20001 (Ephemeral). Zero-trace broadcast.</p>
+            <p><strong>3. Consensus:</strong> GHOST (Greediest Heaviest Observed Sub-Tree). Longest chain wins. Local mining broadcast via RTC.</p>
             <hr>
-            <h2>GHOST CHAIN: USER OPERATING GUIDE</h2>
-            <p><strong>1. Prerequisites:</strong> Access URL and a modern browser. No PAT or registration required.</p>
-            <p><strong>2. Initializing:</strong> Select a Room Name (shared frequency) and a Secret Key (encryption). Click INITIALIZE_GHOST.</p>
-            <p><strong>3. Communication:</strong> Type data and click MINE. New blocks are broadcast directly into your peer's browser RAM.</p>
-            <p><strong>4. The Kill Switch:</strong> Closing the tab or refreshing acting as a master purge, instantly erasing the local ledger and session identity.</p>
+            <h2>OPERATING GUIDE</h2>
+            <p><strong>1. Boot:</strong> Select Room and Key. Click Initialize.</p>
+            <p><strong>2. Kill Switch:</strong> Refresh page to instantly purge all data from RAM.</p>
         </div>
     </div>
 
     <div id="setup" style="width: 100%; max-width: 600px;">
         <p class="system">STATUS: <span id="conn-status" style="color: yellow;">OFFLINE</span></p>
         <div class="input-group">
-            <input type="text" id="room-name" placeholder="Room Name (e.g. Sector-7)">
+            <input type="text" id="room-name" placeholder="Room Name">
             <input type="password" id="cipher-key" placeholder="Secret Key">
             <button onclick="boot()">INITIALIZE_GHOST</button>
         </div>
@@ -74,7 +112,7 @@
     <div id="terminal" class="hidden" style="width: 100%; max-width: 600px;">
         <div id="log"></div>
         <div class="input-group">
-            <input type="text" id="data-input" placeholder="Enter data to mine...">
+            <input type="text" id="data-input" placeholder="Mine data...">
             <button onclick="mine()">MINE</button>
         </div>
         <p id="peer-status" class="system">Searching for peers...</p>
@@ -95,20 +133,18 @@
             const roomName = document.getElementById('room-name').value;
             const key = document.getElementById('cipher-key').value;
             if(!roomName || !key) return alert("Room and Key required.");
-            
-            debug("Initializing Immortal Ghost Protocol...");
+            debug("Booting GHOST_v3.2...");
             roomTopic = await hashTopic(roomName + key);
 
             peer = new Peer(`gc-${Math.floor(Math.random()*99999)}`);
             peer.on('open', (myId) => {
-                debug(`Local Node Live: ${myId}`);
+                debug(`Local Node: ${myId}`);
                 document.getElementById('setup').classList.add('hidden');
                 document.getElementById('terminal').classList.remove('hidden');
-                
                 RELAYS.forEach(url => {
                     const ws = new WebSocket(url);
                     ws.onopen = () => {
-                        debug(`Relay Active: ${url.split('//')[1]}`);
+                        debug(`Relay: ${url.split('//')[1]}`);
                         sockets.push(ws);
                         announce(myId, ws);
                         listen(ws);
@@ -136,7 +172,6 @@
             ws.onmessage = (msg) => {
                 const d = JSON.parse(msg.data);
                 if (d[0] === "EVENT" && d[2].content !== peer.id && !connections.find(c => c.peer === d[2].content)) {
-                    debug(`Tunneling via Mesh: ${d[2].content.slice(-5)}`);
                     setupConn(peer.connect(d[2].content));
                 }
             };
@@ -160,13 +195,11 @@
         function mine() {
             const val = document.getElementById('data-input').value;
             if(!val) return;
-            // Ghost ID is the last 5 chars of the randomized Peer ID
-            const ghostId = peer.id.slice(-5);
             blockchain.push({ 
                 index: blockchain.length, 
                 data: val, 
-                ts: new Date().toLocaleTimeString(),
-                sender: ghostId 
+                ts: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                sender: peer.id.slice(-5) 
             });
             connections.forEach(c => c.send({ type: 'CHAIN', chain: blockchain }));
             render();
@@ -177,9 +210,11 @@
             const logDiv = document.getElementById('log');
             logDiv.innerHTML = blockchain.map(b => `
                 <div class="block">
-                    <span class="sender-id">GHOST_${b.sender}</span>
                     <b>BLOCK_${b.index}:</b> ${b.data}
-                    <div style="font-size:0.7em; color:#444;">TIME: ${b.ts}</div>
+                    <div class="block-meta">
+                        <span class="sender-id">ID: GHOST_${b.sender}</span>
+                        <span class="timestamp">TS: ${b.ts}</span>
+                    </div>
                 </div>`).join('');
             logDiv.scrollTop = logDiv.scrollHeight;
         }
