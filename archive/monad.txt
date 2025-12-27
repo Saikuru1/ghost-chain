@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+contract GhostLedger {
+    mapping(string => uint256) public balances;
+    mapping(bytes32 => bool) public processedProofs;
+    address public bridgeAuthority;
+
+    event WorkNotarized(string indexed ghostId, uint256 amount);
+
+    constructor() {
+        bridgeAuthority = msg.sender;
+    }
+
+    function claimMintedGHC(string memory ghostId, uint256 amount, bytes32 proofSig) public {
+        // Prevent double-spending of the same proof
+        require(!processedProofs[proofSig], "PROOF_ALREADY_REDEEMED");
+        
+        // In this alpha version, we trust the submitter; 
+        // v5.3 will add ECDSA signature verification.
+        balances[ghostId] += amount;
+        processedProofs[proofSig] = true;
+
+        emit WorkNotarized(ghostId, amount);
+    }
+}

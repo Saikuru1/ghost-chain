@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GHOST_BRIDGE_NOTARY</title>
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 40px; text-align: center; }
+        .receiver-box { border: 1px double #00ff41; padding: 20px; max-width: 600px; margin: 0 auto; background: #000; }
+        textarea { width: 100%; height: 100px; background: #111; color: #00ff41; border: 1px solid #003300; padding: 10px; box-sizing: border-box; margin-bottom: 20px; }
+        .result { margin-top: 20px; padding: 15px; border: 1px solid #444; text-align: left; font-size: 0.9em; display: none; }
+        .valid { border-color: #00ff41; color: #fff; }
+        button { background: #00ff41; color: #000; border: none; padding: 15px; width: 100%; cursor: pointer; font-weight: bold; }
+        h2 { text-shadow: 0 0 10px #00ff41; }
+    </style>
+</head>
+<body>
+
+    <div class="receiver-box">
+        <h2>MONAD_BRIDGE_RECEIVER</h2>
+        <p style="font-size: 0.8em; color: #003300;">INPUT WORK CERTIFICATE FOR NOTARIZATION</p>
+        <textarea id="certInput" placeholder="Paste eyJnaG9zdF9pZCI6..."></textarea>
+        <button onclick="validateProof()">VALIDATE_&_STAMP</button>
+
+        <div id="resultBox" class="result">
+            <div id="status">STATUS: PENDING...</div>
+            <hr style="border: 0; border-top: 1px solid #222;">
+            <pre id="dataContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        function validateProof() {
+            const input = document.getElementById('certInput').value;
+            const resBox = document.getElementById('resultBox');
+            const status = document.getElementById('status');
+            const dataContent = document.getElementById('dataContent');
+
+            try {
+                const decoded = JSON.parse(atob(input));
+                
+                // IN A REAL BRIDGE: 
+                // We would re-hash the data to ensure the signature matches.
+                
+                resBox.style.display = "block";
+                resBox.className = "result valid";
+                status.innerText = "STATUS: VALIDATED [GENESIS_BLOCK_STAMP]";
+                
+                dataContent.innerText = JSON.stringify(decoded, null, 4);
+                
+                console.log("NOTARIZED_FOR_MONAD:", decoded);
+            } catch(e) {
+                resBox.style.display = "block";
+                resBox.style.borderColor = "red";
+                status.innerText = "STATUS: INVALID_CERTIFICATE_OR_CORRUPT_DATA";
+                dataContent.innerText = "";
+            }
+        }
+    </script>
+</body>
+</html>

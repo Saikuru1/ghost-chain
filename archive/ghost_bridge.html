@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GHOST_BRIDGE_v1.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        :root { --monad: #836efb; --glow: #00ff41; --bg: #050505; }
+        body { background: var(--bg); color: var(--glow); font-family: 'Courier New', monospace; padding: 40px; text-align: center; }
+        .bridge-box { border: 1px solid var(--monad); padding: 30px; max-width: 600px; margin: 0 auto; background: #000; box-shadow: 0 0 20px rgba(131, 110, 251, 0.2); }
+        textarea { width: 100%; height: 100px; background: #0a0a0a; color: var(--glow); border: 1px solid #333; padding: 10px; box-sizing: border-box; margin: 20px 0; font-size: 12px; }
+        button { background: var(--monad); color: white; border: none; padding: 15px; width: 100%; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        button:hover { background: #fff; color: var(--monad); }
+        .status { margin-top: 20px; font-size: 0.8em; color: #888; text-align: left; border: 1px solid #222; padding: 10px; }
+        .highlight { color: var(--monad); }
+    </style>
+</head>
+<body>
+
+    <div class="bridge-box">
+        <h2 style="color:var(--monad)">GHOST_BRIDGE // MONAD</h2>
+        <p style="font-size: 0.7em;">PASTE WORK CERTIFICATE TO IMMORTALIZE ON-CHAIN</p>
+        
+        <textarea id="certInput" placeholder="Paste eyJnaG9zdF9pZCI6..."></textarea>
+        
+        <button onclick="claimGHC()">CLAIM_ON_MONAD</button>
+
+        <div class="status" id="statusBox">
+            LEDGER_STATUS: <span id="ledgerStat">DISCONNECTED</span><br>
+            CONTRACT: <span id="contractAddr">NOT_SET</span>
+        </div>
+    </div>
+
+    <script>
+        // PASTE THE ADDRESS OF THE CONTRACT YOU DEPLOYED IN REMIX HERE:
+        const CONTRACT_ADDRESS = "0xa3e5b7cd5274EED48EB547CfF973faD34AF3bb96"; 
+        
+        const ABI = [
+            "function claimMintedGHC(string ghostId, uint256 amount, bytes32 proofSig) public",
+            "function balances(string ghostId) public view returns (uint256)"
+        ];
+
+        async function claimGHC() {
+            const input = document.getElementById('certInput').value;
+            const status = document.getElementById('ledgerStat');
+            
+            if (!window.ethereum) return alert("Please install MetaMask");
+            
+            try {
+                // 1. Decode the Proof
+                const receipt = JSON.parse(atob(input));
+                console.log("Decoded Receipt:", receipt);
+
+                // 2. Connect to Wallet
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+                // 3. Format Data for Solidity
+                // Multiply by 10,000 to handle 4 decimal places (0.0150 -> 150)
+                const amount = Math.floor(parseFloat(receipt.minted_value) * 10000);
+                // Ensure Sig is 32 bytes (64 chars) with 0x prefix
+                const sig = "0x" + receipt.proof_sig.padEnd(64, '0');
+
+                status.innerText = "SENDING_TO_MONAD...";
+                
+                // 4. Send Transaction
+                const tx = await contract.claimMintedGHC(receipt.ghost_id, amount, sig);
+                await tx.wait();
+
+                status.innerHTML = `<span class="highlight">SUCCESS: TX_MINED</span>`;
+                alert("Value successfully notarized on the Monad Ledger!");
+
+            } catch (e) {
+                console.error(e);
+                status.innerText = "ERROR: " + e.message;
+            }
+        }
+
+        document.getElementById('contractAddr').innerText = CONTRACT_ADDRESS;
+    </script>
+</body>
+</html>
